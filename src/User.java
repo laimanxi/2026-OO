@@ -146,9 +146,7 @@ public class User implements UserInterface {
         receivedVideos.removeIf(v -> v == videoId);
     }
 
-    /**
-     * 供单测比较状态；基本类型用 ==，引用类型用 equals。
-     */
+    /** 供 JUnit 比对状态：非容器字段用 == / equals；容器内元素按位 equals。 */
     public boolean strictEquals(UserInterface other) {
         if (!(other instanceof User)) {
             return false;
@@ -162,13 +160,13 @@ public class User implements UserInterface {
                 || receivedVideos.size() != o.receivedVideos.size()) {
             return false;
         }
-        for (UserInterface u : following) {
-            if (!o.isFollowing(u)) {
+        for (int i = 0; i < following.size(); i++) {
+            if (!following.get(i).equals(o.following.get(i))) {
                 return false;
             }
         }
-        for (UserInterface u : followers) {
-            if (!o.containsFollower(u)) {
+        for (int i = 0; i < followers.size(); i++) {
+            if (!followers.get(i).equals(o.followers.get(i))) {
                 return false;
             }
         }

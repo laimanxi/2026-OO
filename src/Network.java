@@ -28,9 +28,6 @@ public class Network implements NetworkInterface {
         videos = new ArrayList<>();
     }
 
-    /**
-     * 供单测使用，浅拷贝当前用户列表。
-     */
     public UserInterface[] getUsers() {
         return users.toArray(new UserInterface[0]);
     }

@@ -9,16 +9,44 @@ import static org.junit.Assert.assertTrue;
 
 public class NetworkTest {
 
-    private static void assertGraphUnchanged(Network net, UserInterface[] beforeUsers) {
-        UserInterface[] afterUsers = net.getUsers();
-        assertEquals(beforeUsers.length, afterUsers.length);
-        for (int i = 0; i < beforeUsers.length; i++) {
-            assertSame("纯查询不应替换用户对象引用", beforeUsers[i], afterUsers[i]);
-            assertTrue(((User) beforeUsers[i]).strictEquals(afterUsers[i]));
+    private static int specMutualFollowingSum(Network net) {
+        UserInterface[] users = net.getUsers();
+        int n = users.length;
+        int sum = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) {
+                if (users[i].isFollowing(users[j]) && users[j].isFollowing(users[i])) {
+                    sum++;
+                }
+            }
+        }
+        return sum;
+    }
+
+    private static void assertAfterQueryUnchanged(Network net, UserInterface[] before) {
+        UserInterface[] after = net.getUsers();
+        assertEquals(before.length, after.length);
+        for (int i = 0; i < before.length; i++) {
+            assertSame(before[i], after[i]);
+            assertTrue(((User) before[i]).strictEquals(after[i]));
         }
     }
 
-    private static Network networkWithThreeUsers() throws EqualUserIdException, InvalidAgeException {
+    private static void checkSumAndPure(Network net) {
+        UserInterface[] before = net.getUsers();
+        assertEquals(specMutualFollowingSum(net), net.queryMutualFollowingSum());
+        assertAfterQueryUnchanged(net, before);
+    }
+
+    private static void checkSumTwiceAndPure(Network net) {
+        UserInterface[] before = net.getUsers();
+        int want = specMutualFollowingSum(net);
+        assertEquals(want, net.queryMutualFollowingSum());
+        assertEquals(want, net.queryMutualFollowingSum());
+        assertAfterQueryUnchanged(net, before);
+    }
+
+    private static Network threeUsers() throws EqualUserIdException, InvalidAgeException {
         Network net = new Network();
         net.addUser(1, "a", 20);
         net.addUser(2, "b", 21);
@@ -27,54 +55,43 @@ public class NetworkTest {
     }
 
     @Test
-    public void mutualSumEmptyGraph() {
-        Network net = new Network();
-        UserInterface[] snap = net.getUsers();
-        assertEquals(0, net.queryMutualFollowingSum());
-        assertGraphUnchanged(net, snap);
+    public void empty() {
+        checkSumAndPure(new Network());
     }
 
     @Test
-    public void mutualSumSingleUser() throws EqualUserIdException, InvalidAgeException {
+    public void singleUser() throws EqualUserIdException, InvalidAgeException {
         Network net = new Network();
         net.addUser(1, "x", 18);
-        UserInterface[] snap = net.getUsers();
-        assertEquals(0, net.queryMutualFollowingSum());
-        assertGraphUnchanged(net, snap);
+        checkSumAndPure(net);
     }
 
     @Test
-    public void mutualSumOneWayNoPair() throws Exception {
-        Network net = networkWithThreeUsers();
+    public void oneWayEdge() throws Exception {
+        Network net = threeUsers();
         net.followUser(1, 2);
-        UserInterface[] snap = net.getUsers();
-        assertEquals(0, net.queryMutualFollowingSum());
-        assertGraphUnchanged(net, snap);
+        checkSumAndPure(net);
     }
 
     @Test
-    public void mutualSumOneMutualPair() throws Exception {
-        Network net = networkWithThreeUsers();
+    public void oneMutualPair() throws Exception {
+        Network net = threeUsers();
         net.followUser(1, 2);
         net.followUser(2, 1);
-        UserInterface[] snap = net.getUsers();
-        assertEquals(1, net.queryMutualFollowingSum());
-        assertGraphUnchanged(net, snap);
+        checkSumAndPure(net);
     }
 
     @Test
-    public void mutualSumMatchesGuideSample() throws Exception {
-        Network net = networkWithThreeUsers();
+    public void guideSample() throws Exception {
+        Network net = threeUsers();
         net.followUser(1, 2);
         net.followUser(2, 1);
         net.followUser(2, 3);
-        UserInterface[] snap = net.getUsers();
-        assertEquals(1, net.queryMutualFollowingSum());
-        assertGraphUnchanged(net, snap);
+        checkSumAndPure(net);
     }
 
     @Test
-    public void mutualSumTwoDisjointPairs() throws Exception {
+    public void twoDisjointMutualPairs() throws Exception {
         Network net = new Network();
         net.addUser(1, "a", 20);
         net.addUser(2, "b", 21);
@@ -84,23 +101,39 @@ public class NetworkTest {
         net.followUser(2, 1);
         net.followUser(3, 4);
         net.followUser(4, 3);
-        UserInterface[] snap = net.getUsers();
-        assertEquals(2, net.queryMutualFollowingSum());
-        assertGraphUnchanged(net, snap);
+        checkSumAndPure(net);
     }
 
     @Test
-    public void mutualSumIdempotentAndPure() throws Exception {
-        Network net = networkWithThreeUsers();
+    public void triangleComplete() throws Exception {
+        Network net = threeUsers();
         net.followUser(1, 2);
         net.followUser(2, 1);
         net.followUser(2, 3);
         net.followUser(3, 2);
-        UserInterface[] snap = net.getUsers();
-        int once = net.queryMutualFollowingSum();
-        int twice = net.queryMutualFollowingSum();
-        assertEquals(2, once);
-        assertEquals(once, twice);
-        assertGraphUnchanged(net, snap);
+        net.followUser(1, 3);
+        net.followUser(3, 1);
+        checkSumAndPure(net);
+    }
+
+    @Test
+    public void callTwice() throws Exception {
+        Network net = threeUsers();
+        net.followUser(1, 2);
+        net.followUser(2, 1);
+        net.followUser(2, 3);
+        net.followUser(3, 2);
+        checkSumTwiceAndPure(net);
+    }
+
+    @Test
+    public void usersNotOrderedById() throws Exception {
+        Network net = new Network();
+        net.addUser(10, "p", 20);
+        net.addUser(5, "q", 21);
+        net.addUser(20, "r", 22);
+        net.followUser(10, 5);
+        net.followUser(5, 10);
+        checkSumAndPure(net);
     }
 }
