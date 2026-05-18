@@ -197,16 +197,14 @@ public class Network implements NetworkInterface {
         while (!queue.isEmpty()) {
             UserInterface cur = queue.remove();
             int d = depth.get(cur.getId());
-            for (UserInterface next : users) {
-                if (cur.isFollowing(next)) {
-                    if (!depth.containsKey(next.getId())) {
-                        int nextD = d + 1;
-                        if (next.getId() == id2) {
-                            return nextD;
-                        }
-                        depth.put(next.getId(), nextD);
-                        queue.add(next);
+            for (UserInterface next : ((User) cur).outNeighbors()) {
+                if (!depth.containsKey(next.getId())) {
+                    int nextD = d + 1;
+                    if (next.getId() == id2) {
+                        return nextD;
                     }
+                    depth.put(next.getId(), nextD);
+                    queue.add(next);
                 }
             }
         }

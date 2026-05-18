@@ -122,6 +122,10 @@ public class User implements UserInterface {
         return Objects.hash(id);
     }
 
+    List<UserInterface> outNeighbors() {
+        return following;
+    }
+
     void addFollowing(UserInterface user) {
         following.add(user);
     }
