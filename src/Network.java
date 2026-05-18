@@ -22,10 +22,12 @@ public class Network implements NetworkInterface {
 
     private final List<UserInterface> users;
     private final List<VideoInterface> videos;
+    private int mutualFollowingSum;
 
     public Network() {
         users = new ArrayList<>();
         videos = new ArrayList<>();
+        mutualFollowingSum = 0;
     }
 
     public UserInterface[] getUsers() {
@@ -112,6 +114,9 @@ public class Network implements NetworkInterface {
         if (u1.isFollowing(u2)) {
             throw new DuplicateSubscriptionException(id1, id2);
         }
+        if (u2.isFollowing(u1)) {
+            mutualFollowingSum++;
+        }
         ((User) u1).addFollowing(u2);
         ((User) u2).addFollower(u1);
         System.out.println("follow_user succeeded");
@@ -130,6 +135,9 @@ public class Network implements NetworkInterface {
         UserInterface u2 = getUser(id2);
         if (!u1.isFollowing(u2)) {
             throw new FollowLinkNotFoundException(id1, id2);
+        }
+        if (u2.isFollowing(u1)) {
+            mutualFollowingSum--;
         }
         ((User) u1).removeFollowing(u2);
         ((User) u2).removeFollower(u1);
@@ -167,18 +175,7 @@ public class Network implements NetworkInterface {
 
     @Override
     public int queryMutualFollowingSum() {
-        int sum = 0;
-        int n = users.size();
-        for (int i = 0; i < n; i++) {
-            UserInterface a = users.get(i);
-            for (int j = i + 1; j < n; j++) {
-                UserInterface b = users.get(j);
-                if (a.isFollowing(b) && b.isFollowing(a)) {
-                    sum++;
-                }
-            }
-        }
-        return sum;
+        return mutualFollowingSum;
     }
 
     @Override
