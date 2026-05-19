@@ -129,16 +129,22 @@ public class Video implements VideoInterface {
     }
 
     int[] cleanSpam(String keyword) {
-        int removed = 0;
+        int n = commentIds.size();
         int maxKeywordCount = 0;
+        for (int i = 0; i < n; i++) {
+            String content = commentContents.get(i);
+            if (hasKeywordMatch(content, keyword)) {
+                maxKeywordCount = Math.max(maxKeywordCount, countKeyword(content, keyword));
+            }
+        }
+
+        int removed = 0;
         List<Integer> newIds = new ArrayList<>();
         List<String> newContents = new ArrayList<>();
-
-        for (int i = 0; i < commentIds.size(); i++) {
+        for (int i = 0; i < n; i++) {
             String content = commentContents.get(i);
             if (content.contains(keyword)) {
                 removed++;
-                maxKeywordCount = Math.max(maxKeywordCount, countKeyword(content, keyword));
             } else {
                 newIds.add(commentIds.get(i));
                 newContents.add(content);
@@ -150,7 +156,23 @@ public class Video implements VideoInterface {
         commentIds.addAll(newIds);
         commentContents.addAll(newContents);
 
+        if (removed == 0) {
+            return new int[]{0, 0};
+        }
         return new int[]{removed, maxKeywordCount};
+    }
+
+    private static boolean hasKeywordMatch(String content, String keyword) {
+        if (keyword.isEmpty()) {
+            return true;
+        }
+        int len = keyword.length();
+        for (int j = 0; j + len <= content.length(); j++) {
+            if (content.substring(j, j + len).equals(keyword)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     static int countKeyword(String content, String keyword) {

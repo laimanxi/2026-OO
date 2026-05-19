@@ -220,7 +220,15 @@ public class User implements UserInterface {
         coins -= amount;
     }
 
-    void addContribution(int contributorId, int amount) {
+    boolean hasContributor(int contributorId) {
+        return contributionByUserId.containsKey(contributorId);
+    }
+
+    void addFirstContribution(int contributorId, int amount) {
+        contributionByUserId.put(contributorId, amount);
+    }
+
+    void addMoreContribution(int contributorId, int amount) {
         contributionByUserId.merge(contributorId, amount, Integer::sum);
     }
 

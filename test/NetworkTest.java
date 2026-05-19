@@ -184,6 +184,19 @@ public class NetworkTest {
         setupVideoWithComments();
         int[] result = network.cleanSpamComments(101, "");
         assertEquals(2, result[0]);
+        assertEquals(9, result[1]);
         assertEquals(0, ((Video) network.getVideo(101)).getCommentIds().length);
+    }
+
+    @Test
+    public void maxCountOverAllMatchingComments() throws Exception {
+        network.addUser(1, "A", 20);
+        network.uploadVideo(1, 101, "tech");
+        network.watchVideo(1, 101);
+        network.sendComment(1, 101, 1, "ababab");
+        network.sendComment(1, 101, 2, "good");
+        int[] result = network.cleanSpamComments(101, "ab");
+        assertEquals(1, result[0]);
+        assertEquals(3, result[1]);
     }
 }

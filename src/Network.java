@@ -240,7 +240,8 @@ public class Network implements NetworkInterface {
 
     @Override
     public void likeVideo(int userId, int videoId)
-            throws UserIdNotFoundException, VideoIdNotFoundException, VideoUnwatchedException {
+            throws UserIdNotFoundException, VideoIdNotFoundException, VideoUnwatchedException,
+            EqualUserIdException {
         if (!containsUser(userId)) {
             throw new UserIdNotFoundException(userId);
         }
@@ -249,6 +250,9 @@ public class Network implements NetworkInterface {
         }
         User user = (User) getUser(userId);
         VideoInterface video = getVideo(videoId);
+        if (userId == video.getUploaderId()) {
+            throw new EqualUserIdException(userId);
+        }
         if (!user.hasWatchedVideo(video)) {
             throw new VideoUnwatchedException(userId, videoId);
         }
@@ -267,7 +271,7 @@ public class Network implements NetworkInterface {
     @Override
     public void coinVideo(int userId, int videoId, int amount)
             throws UserIdNotFoundException, VideoIdNotFoundException, InsufficientCoinsException,
-            VideoUnwatchedException, InvalidCoinsException {
+            VideoUnwatchedException, InvalidCoinsException, EqualUserIdException {
         if (!containsUser(userId)) {
             throw new UserIdNotFoundException(userId);
         }
@@ -276,6 +280,10 @@ public class Network implements NetworkInterface {
         }
         User user = (User) getUser(userId);
         VideoInterface video = getVideo(videoId);
+        int uploaderId = video.getUploaderId();
+        if (userId == uploaderId) {
+            throw new EqualUserIdException(userId);
+        }
         if (!user.hasWatchedVideo(video)) {
             throw new VideoUnwatchedException(userId, videoId);
         }
@@ -288,9 +296,13 @@ public class Network implements NetworkInterface {
         user.spendCoins(amount);
         Video v = (Video) video;
         v.addCoins(amount);
-        User uploader = (User) getUser(video.getUploaderId());
+        User uploader = (User) getUser(uploaderId);
         uploader.addCoins(amount);
-        uploader.addContribution(userId, amount);
+        if (uploader.hasContributor(userId)) {
+            uploader.addMoreContribution(userId, amount);
+        } else {
+            uploader.addFirstContribution(userId, amount);
+        }
         System.out.println("coin_video succeeded");
     }
 
@@ -385,8 +397,8 @@ public class Network implements NetworkInterface {
 
     @Override
     public void purchaseMedal(int userId, int videoId, int amount)
-            throws UserIdNotFoundException, VideoIdNotFoundException, InsufficientCoinsException,
-            DuplicateMedalException {
+            throws UserIdNotFoundException, VideoIdNotFoundException, EqualUserIdException,
+            InsufficientCoinsException, DuplicateMedalException {
         if (!containsUser(userId)) {
             throw new UserIdNotFoundException(userId);
         }
@@ -395,6 +407,9 @@ public class Network implements NetworkInterface {
         }
         User user = (User) getUser(userId);
         int uploaderId = getVideo(videoId).getUploaderId();
+        if (userId == uploaderId) {
+            throw new EqualUserIdException(userId);
+        }
         if (user.getCoins() < amount) {
             throw new InsufficientCoinsException(userId);
         }
@@ -402,7 +417,30 @@ public class Network implements NetworkInterface {
             throw new DuplicateMedalException(userId, uploaderId);
         }
         user.spendCoins(amount);
+        ((User) getUser(uploaderId)).addCoins(amount);
         user.addMedal(uploaderId);
         System.out.println("purchase_medal succeeded");
+    }
+
+    @Override
+    public int queryLongestDecSeq() {
+        if (users.isEmpty()) {
+            return 0;
+        }
+        List<UserInterface> sorted = new ArrayList<>(users);
+        sorted.sort((a, b) -> Integer.compare(b.getAge(), a.getAge()));
+        Map<Integer, Integer> dp = new HashMap<>();
+        int ans = 0;
+        for (UserInterface u : sorted) {
+            int len = 1;
+            for (UserInterface v : ((User) u).outNeighbors()) {
+                if (u.getAge() > v.getAge()) {
+                    len = Math.max(len, 1 + dp.getOrDefault(v.getId(), 1));
+                }
+            }
+            dp.put(u.getId(), len);
+            ans = Math.max(ans, len);
+        }
+        return ans;
     }
 }
