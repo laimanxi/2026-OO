@@ -1,7 +1,10 @@
 import com.oocourse.spec2.exceptions.VideoIdNotFoundException;
 import com.oocourse.spec2.main.UserInterface;
+import com.oocourse.spec2.main.VideoInterface;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.List;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -26,6 +29,15 @@ public class NetworkTest {
         network.sendComment(2, 101, 2, "Bad_Spam");
     }
 
+    private void assertUserStateEquals(Network expected, Network actual, int userId) {
+        UserInterface e = expected.getUser(userId);
+        UserInterface a = actual.getUser(userId);
+        assertEquals(e.getId(), a.getId());
+        assertEquals(e.getName(), a.getName());
+        assertEquals(e.getAge(), a.getAge());
+        assertEquals(e.getCoins(), a.getCoins());
+    }
+
     @Test
     public void noSpam() throws Exception {
         setupVideoWithComments();
@@ -40,6 +52,7 @@ public class NetworkTest {
     public void sampleFromGuide() throws Exception {
         setupVideoWithComments();
         int[] result = network.cleanSpamComments(101, "Spam");
+        assertEquals(2, result.length);
         assertEquals(1, result[0]);
         assertEquals(1, result[1]);
         Video video = (Video) network.getVideo(101);
@@ -53,6 +66,7 @@ public class NetworkTest {
     public void deleteAllSpam() throws Exception {
         setupVideoWithComments();
         int[] result = network.cleanSpamComments(101, "Bad");
+        assertEquals(2, result.length);
         assertEquals(1, result[0]);
         assertEquals(1, result[1]);
         assertEquals(1, ((Video) network.getVideo(101)).getCommentIds().length);
@@ -65,6 +79,7 @@ public class NetworkTest {
         network.watchVideo(1, 101);
         network.sendComment(1, 101, 1, "aaaa");
         int[] result = network.cleanSpamComments(101, "aa");
+        assertEquals(2, result.length);
         assertEquals(1, result[0]);
         assertEquals(3, result[1]);
     }
@@ -112,11 +127,18 @@ public class NetworkTest {
 
         network.cleanSpamComments(101, "Spam");
 
-        UserInterface[] before = snapshot.getUsers();
-        UserInterface[] after = network.getUsers();
-        for (int i = 0; i < before.length; i++) {
-            assertTrue(((User) before[i]).strictEquals(after[i]));
-        }
+        assertUserStateEquals(snapshot, network, 1);
+        assertUserStateEquals(snapshot, network, 2);
+        assertEquals(snapshot.getUser(2).isFollowing(snapshot.getUser(1)),
+                network.getUser(2).isFollowing(network.getUser(1)));
+        assertEquals(snapshot.getUser(1).containsFollower(snapshot.getUser(2)),
+                network.getUser(1).containsFollower(network.getUser(2)));
+        VideoInterface video = network.getVideo(101);
+        assertEquals(snapshot.getUser(2).hasWatchedVideo(video),
+                network.getUser(2).hasWatchedVideo(video));
+        List<Integer> expectedList = snapshot.getUser(2).queryReceivedUnwatchedVideos();
+        List<Integer> actualList = network.getUser(2).queryReceivedUnwatchedVideos();
+        assertEquals(expectedList, actualList);
     }
 
     @Test
@@ -153,9 +175,10 @@ public class NetworkTest {
 
         Video other = (Video) network.getVideo(102);
         int[] idsBefore = other.getCommentIds();
+        String[] contentsBefore = other.getCommentContents();
         network.cleanSpamComments(101, "spam");
         assertArrayEquals(idsBefore, other.getCommentIds());
-        assertArrayEquals(new String[]{"keep"}, other.getCommentContents());
+        assertArrayEquals(contentsBefore, other.getCommentContents());
     }
 
     @Test
@@ -175,6 +198,7 @@ public class NetworkTest {
         network.sendComment(1, 101, 1, "ababab");
         network.sendComment(1, 101, 2, "ab");
         int[] result = network.cleanSpamComments(101, "ab");
+        assertEquals(2, result.length);
         assertEquals(2, result[0]);
         assertEquals(3, result[1]);
     }
@@ -183,6 +207,7 @@ public class NetworkTest {
     public void emptyKeywordRemovesAll() throws Exception {
         setupVideoWithComments();
         int[] result = network.cleanSpamComments(101, "");
+        assertEquals(2, result.length);
         assertEquals(2, result[0]);
         assertEquals(9, result[1]);
         assertEquals(0, ((Video) network.getVideo(101)).getCommentIds().length);
@@ -196,7 +221,24 @@ public class NetworkTest {
         network.sendComment(1, 101, 1, "ababab");
         network.sendComment(1, 101, 2, "good");
         int[] result = network.cleanSpamComments(101, "ab");
+        assertEquals(2, result.length);
         assertEquals(1, result[0]);
         assertEquals(3, result[1]);
+    }
+
+    @Test
+    public void commentArraysDeepCopy() throws Exception {
+        setupVideoWithComments();
+        Video video = (Video) network.getVideo(101);
+        int[] ids = video.getCommentIds();
+        String[] contents = video.getCommentContents();
+        int originalId = ids[0];
+        String originalContent = contents[0];
+        ids[0] = -1;
+        contents[0] = "mutated";
+        int[] idsAgain = video.getCommentIds();
+        String[] contentsAgain = video.getCommentContents();
+        assertEquals(originalId, idsAgain[0]);
+        assertEquals(originalContent, contentsAgain[0]);
     }
 }
