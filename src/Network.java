@@ -428,7 +428,7 @@ public class Network implements NetworkInterface {
             return 0;
         }
         List<UserInterface> sorted = new ArrayList<>(users);
-        sorted.sort((a, b) -> Integer.compare(b.getAge(), a.getAge()));
+        sorted.sort((a, b) -> Integer.compare(a.getAge(), b.getAge()));
         Map<Integer, Integer> dp = new HashMap<>();
         int ans = 0;
         for (UserInterface u : sorted) {
