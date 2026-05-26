@@ -324,37 +324,22 @@ public class User implements UserInterface {
         videos.add(video);
     }
 
-    public boolean strictEquals(UserInterface other) {
-        if (!(other instanceof User)) {
+    private boolean checkBasicAttributes(User o) {
+        return id == o.id && age == o.age && coins == o.coins
+                && name.equals(o.name);
+    }
+
+    private boolean checkCollectionsEqual(User o) {
+        if (following.size() != o.following.size()
+                || followers.size() != o.followers.size()
+                || receivedVideos.size() != o.receivedVideos.size()
+                || watchedVideos.size() != o.watchedVideos.size()) {
             return false;
         }
-        User o = (User) other;
-        if (id != o.id || age != o.age || coins != o.coins
-                || !name.equals(o.name)) {
-            return false;
-        }
-        if (following.size() != o.following.size()) {
-            return false;
-        }
-        if (followers.size() != o.followers.size()) {
-            return false;
-        }
-        if (receivedVideos.size() != o.receivedVideos.size()) {
-            return false;
-        }
-        if (watchedVideos.size() != o.watchedVideos.size()) {
-            return false;
-        }
-        if (likedVideos.size() != o.likedVideos.size()) {
-            return false;
-        }
-        if (medals.size() != o.medals.size()) {
-            return false;
-        }
-        if (contributionByUserId.size() != o.contributionByUserId.size()) {
-            return false;
-        }
-        if (videos.size() != o.videos.size()) {
+        if (likedVideos.size() != o.likedVideos.size()
+                || medals.size() != o.medals.size()
+                || contributionByUserId.size() != o.contributionByUserId.size()
+                || videos.size() != o.videos.size()) {
             return false;
         }
         for (int i = 0; i < following.size(); i++) {
@@ -392,5 +377,13 @@ public class User implements UserInterface {
             }
         }
         return contributionByUserId.equals(o.contributionByUserId);
+    }
+
+    public boolean strictEquals(UserInterface other) {
+        if (!(other instanceof User)) {
+            return false;
+        }
+        User o = (User) other;
+        return checkBasicAttributes(o) && checkCollectionsEqual(o);
     }
 }
