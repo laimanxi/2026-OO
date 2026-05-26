@@ -333,15 +333,28 @@ public class User implements UserInterface {
                 || !name.equals(o.name)) {
             return false;
         }
-        if (following.size() != o.following.size()
-                || followers.size() != o.followers.size()
-                || receivedVideos.size() != o.receivedVideos.size()
-                || watchedVideos.size() != o.watchedVideos.size()
-                || likedVideos.size() != o.likedVideos.size()
-                || medals.size() != o.medals.size()
-                || contributionByUserId.size()
-                != o.contributionByUserId.size()
-                || videos.size() != o.videos.size()) {
+        if (following.size() != o.following.size()) {
+            return false;
+        }
+        if (followers.size() != o.followers.size()) {
+            return false;
+        }
+        if (receivedVideos.size() != o.receivedVideos.size()) {
+            return false;
+        }
+        if (watchedVideos.size() != o.watchedVideos.size()) {
+            return false;
+        }
+        if (likedVideos.size() != o.likedVideos.size()) {
+            return false;
+        }
+        if (medals.size() != o.medals.size()) {
+            return false;
+        }
+        if (contributionByUserId.size() != o.contributionByUserId.size()) {
+            return false;
+        }
+        if (videos.size() != o.videos.size()) {
             return false;
         }
         for (int i = 0; i < following.size(); i++) {
