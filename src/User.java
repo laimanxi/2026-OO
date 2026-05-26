@@ -252,11 +252,11 @@ public class User implements UserInterface {
         if (!watchedVideoIds.contains(video.getId())) {
             watchedVideoIds.add(video.getId());
             watchedVideos.add(video);
-            for (int i = 0; i < TYPES.length; i++) {
-                if (TYPES[i].equals(video.getType())) {
-                    typeCounts[i]++;
-                    break;
-                }
+        }
+        for (int i = 0; i < TYPES.length; i++) {
+            if (TYPES[i].equals(video.getType())) {
+                typeCounts[i]++;
+                break;
             }
         }
     }

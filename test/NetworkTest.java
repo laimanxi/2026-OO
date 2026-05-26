@@ -332,4 +332,43 @@ private void assertUsersUnchanged(Network before, Network after) {
         assertEquals(3, network.recommendNthUp(1, 2));
         assertEquals(4, network.recommendNthUp(1, 3));
     }
+
+    @Test
+    public void repeatWatchUpdatesUserProfile() throws Exception {
+        network.addUser(1, "A", 20);
+        network.addUser(2, "B", 22);
+        network.uploadVideo(2, 101, "tech");
+        network.uploadVideo(2, 102, "music");
+        network.watchVideo(1, 101);
+        network.watchVideo(1, 101);
+
+        assertEquals(4, (int) network.queryUserProfile(1).get(0));
+        assertEquals(0, (int) network.queryUserProfile(1).get(1));
+    }
+
+    @Test
+    public void repeatWatchAffectsRecommendVideo() throws Exception {
+        setupRepeatWatchRecommendationNetwork();
+
+        assertEquals(101, network.recommendVideo(1));
+    }
+
+    @Test
+    public void repeatWatchAffectsRecommendNthUp() throws Exception {
+        setupRepeatWatchRecommendationNetwork();
+
+        assertEquals(2, network.recommendNthUp(1, 1));
+    }
+
+    private void setupRepeatWatchRecommendationNetwork() throws Exception {
+        network.addUser(1, "A", 20);
+        network.addUser(2, "TechUp", 22);
+        network.addUser(3, "MusicUp", 25);
+        network.uploadVideo(2, 101, "tech");
+        network.uploadVideo(3, 201, "music");
+        network.watchVideo(1, 101);
+        network.watchVideo(1, 101);
+        network.watchVideo(1, 201);
+        network.likeVideo(1, 201);
+    }
 }

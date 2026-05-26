@@ -538,17 +538,21 @@ public class Network implements NetworkInterface {
         }
         UserInterface user = getUser(userId);
         List<UserInterface> candidates = new ArrayList<>();
+        Map<Integer, Long> scoreByUserId = new HashMap<>();
+        int totalVideos = videos.size();
         for (UserInterface u : users) {
             if (u.getId() != userId && !user.isFollowing(u)) {
                 candidates.add(u);
+                scoreByUserId.put(u.getId(),
+                        user.computeUpScore(u, totalVideos));
             }
         }
         if (candidates.size() < rank) {
             throw new ColdStartUserException(userId);
         }
         candidates.sort((a, b) -> {
-            long scoreA = user.computeUpScore(a, videos.size());
-            long scoreB = user.computeUpScore(b, videos.size());
+            long scoreA = scoreByUserId.get(a.getId());
+            long scoreB = scoreByUserId.get(b.getId());
             if (scoreB != scoreA) {
                 return Long.compare(scoreB, scoreA);
             }
