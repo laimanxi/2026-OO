@@ -1,0 +1,20 @@
+# Ignore everything
+*
+
+# But keep directories so we can whitelist files inside them
+!*/
+
+# Whitelist: all .java files under src (including subdirectories)
+!src/**/*.java
+
+# Whitelist: all files under test folder
+!test/**/*
+
+# Whitelist: hom9.md at root
+!/hom9.md
+
+# Keep .gitignore itself
+!/.gitignore
+
+# Make sure .git itself is ignored
+.git/
