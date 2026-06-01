@@ -1,0 +1,18 @@
+# 忽略所有文件（所有层级）
+*
+
+# 保留 src 和 test 目录（以及它们内部的目录结构）
+!src/
+!test/
+
+# 保留根目录下的特定文件
+!.gitignore
+!hom11.md
+
+# src 内部：只保留目录和 .java 文件
+src/**
+!src/**/
+!src/**/*.java
+
+# test 内部：保留所有内容
+!test/**
