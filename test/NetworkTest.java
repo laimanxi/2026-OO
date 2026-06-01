@@ -136,6 +136,8 @@ public class NetworkTest {
         VideoInterface video = network.getVideo(101);
         assertEquals(snapshot.getUser(2).hasWatchedVideo(video),
                 network.getUser(2).hasWatchedVideo(video));
+        assertEquals(snapshot.getUser(2).hasLikedVideo(video),
+                network.getUser(2).hasLikedVideo(video));
         List<Integer> expectedList = snapshot.getUser(2).queryReceivedUnwatchedVideos();
         List<Integer> actualList = network.getUser(2).queryReceivedUnwatchedVideos();
         assertEquals(expectedList, actualList);

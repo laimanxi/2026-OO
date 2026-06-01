@@ -230,9 +230,12 @@ public class Network implements NetworkInterface {
     }
 
     @Override
-    public void addUserCoins(int userId, int coins) throws UserIdNotFoundException {
+    public void addUserCoins(int userId, int coins) throws UserIdNotFoundException, InvalidCoinsException {
         if (!containsUser(userId)) {
             throw new UserIdNotFoundException(userId);
+        }
+        if (coins <= 0) {
+            throw new InvalidCoinsException(coins);
         }
         ((User) getUser(userId)).addCoins(coins);
         System.out.println("add_user_coins succeeded");
@@ -339,7 +342,7 @@ public class Network implements NetworkInterface {
         }
         UserInterface follower = getUser(followerId);
         if (!user.containsFollower(follower)) {
-            throw new FollowLinkNotFoundException(userId, followerId);
+            throw new FollowLinkNotFoundException(followerId, userId);
         }
         ((User) follower).prependReceivedVideo(videoId);
         ((Video) video).addForward();
@@ -398,7 +401,7 @@ public class Network implements NetworkInterface {
     @Override
     public void purchaseMedal(int userId, int videoId, int amount)
             throws UserIdNotFoundException, VideoIdNotFoundException, EqualUserIdException,
-            InsufficientCoinsException, DuplicateMedalException {
+            InsufficientCoinsException, DuplicateMedalException, InvalidCoinsException {
         if (!containsUser(userId)) {
             throw new UserIdNotFoundException(userId);
         }
@@ -409,6 +412,9 @@ public class Network implements NetworkInterface {
         int uploaderId = getVideo(videoId).getUploaderId();
         if (userId == uploaderId) {
             throw new EqualUserIdException(userId);
+        }
+        if (amount <= 0) {
+            throw new InvalidCoinsException(amount);
         }
         if (user.getCoins() < amount) {
             throw new InsufficientCoinsException(userId);

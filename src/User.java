@@ -157,7 +157,7 @@ public class User implements UserInterface {
     }
 
     List<UserInterface> outNeighbors() {
-        return following;
+        return new ArrayList<>(following);
     }
 
     void addFollowing(UserInterface user) {
